@@ -15,6 +15,7 @@
 
 from google.adk.agents import LlmAgent
 from google.adk.tools.bigquery import BigQueryToolset
+from google.adk.integrations.bigquery.config import BigQueryToolConfig
 from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams, SseConnectionParams, StreamableHTTPConnectionParams
 from google.adk.models import Gemini
@@ -44,7 +45,9 @@ class ResearchOutput(BaseModel):
     sql_queries: list[str]
 
 # 2. Configure Toolsets
-bigquery_toolset = BigQueryToolset()
+bigquery_toolset = BigQueryToolset(
+    bigquery_tool_config=BigQueryToolConfig(compute_project_id=project_id)
+)
 
 maps_mcp = McpToolset(
     connection_params=StreamableHTTPConnectionParams(
