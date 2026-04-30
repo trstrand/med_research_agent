@@ -30,7 +30,7 @@ import google.auth
 auth_credentials, auth_project_id = google.auth.default()
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT") or auth_project_id
 os.environ["GOOGLE_CLOUD_PROJECT"] = str(project_id)
-os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get("GOOGLE_CLOUD_LOCATION") or "us-central1"
+os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # 0. Configure Shared Model with Retry Logic
@@ -47,7 +47,9 @@ class ResearchOutput(BaseModel):
 
 # 2. Configure Toolsets
 bigquery_toolset = BigQueryToolset(
-    bigquery_tool_config=BigQueryToolConfig(compute_project_id=project_id)
+    bigquery_tool_config=BigQueryToolConfig(
+        compute_project_id=project_id,
+    )
 )
 
 maps_mcp = McpToolset(
@@ -119,17 +121,22 @@ workspace_agent = LlmAgent(
 orchestrator = LlmAgent(
     name="orchestrator",
     model=shared_model,
-    instruction="""You are a highly capable and versatile personal medical research assistant. 
-    Your goal is to be the central hub for the user's research journey, from gathering scientific data to practical logistics and organization.
+    instruction="""You are a high-level Health & Research Coordinator. 
+    Your goal is to fulfill complex, multi-part requests by orchestrating specialized sub-agents.
     
-    Be proactive and collaborative:
-    - If the user asks about the benefits or science of something (e.g., 'valerian root'), transfer to the 'researcher'.
-    - If the user wants to know where to buy something, find local stores, or get directions, transfer to the 'maps_agent'.
-    - If the user needs to organize their findings, create calendar events, or check availability, transfer to the 'workspace_agent'.
+    When a user provides a complex request (e.g., 'research X and find stores near me'):
+    1.  **Analyze the Request**: Identify all required components (e.g., Research, Mapping, Calendar).
+    2.  **Execute Sequentially**: Call the relevant sub-agents one by one to gather information.
+    3.  **Synthesize**: Combine the findings from all sub-agents into a single, cohesive, and helpful response for the user.
     
-    Never tell the user you 'only' do one thing. If they have a request that falls outside these areas, try to find a way to help or explain how one of your specialized agents could assist.
+    Sub-agent capabilities:
+    - 'researcher': Provides scientific data from PubMed/PMC. Use this for medical/scientific queries.
+    - 'maps_agent': Finds local stores, facilities, and handles geolocation. Use this for shopping or visiting locations.
+    - 'workspace_agent': Manages Google Calendar. Use this for scheduling follow-ups or reminders.
     
-    Always greet the user warmly and offer to help them with both their scientific research and their practical next steps.""",
+    NEVER refuse a request that can be fulfilled by your team. If a user asks for research and a store, get the research from the 'researcher' first, then get the store info from the 'maps_agent', and finally present both to the user.
+    
+    Maintain a proactive, concierge-like persona that handles all the 'behind the scenes' coordination for the user.""",
     sub_agents=[researcher, maps_agent, workspace_agent]
 )
 
