@@ -14,6 +14,7 @@
 # limitations under the License.
 
 from google.adk.agents import LlmAgent
+from google.adk.tools.bigquery import BigQueryToolset
 from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams, SseConnectionParams, StreamableHTTPConnectionParams
 from google.adk.models import Gemini
@@ -43,11 +44,7 @@ class ResearchOutput(BaseModel):
     sql_queries: list[str]
 
 # 2. Configure Toolsets
-bigquery_mcp = McpToolset(
-    connection_params=StreamableHTTPConnectionParams(
-        url="https://bigquery.googleapis.com/mcp",
-    )
-)
+bigquery_toolset = BigQueryToolset()
 
 maps_mcp = McpToolset(
     connection_params=StreamableHTTPConnectionParams(
@@ -89,10 +86,9 @@ researcher = LlmAgent(
     
     IMPORTANT: 
     1. Always limit SQL queries to LIMIT 5.
-    2. Use the 'execute_sql' tool from the BigQuery MCP server.
-    3. AFTER you get findings, you MUST call the 'summarizer' to process them before returning to the user.
-    4. Do NOT provide raw data or JSON to the user directly; always use the summarizer.""",
-    tools=[bigquery_mcp],
+    2. AFTER you get findings, you MUST call the 'summarizer' to process them before returning to the user.
+    3. Do NOT provide raw data or JSON to the user directly; always use the summarizer.""",
+    tools=[bigquery_toolset],
     sub_agents=[summarizer]
 )
 
