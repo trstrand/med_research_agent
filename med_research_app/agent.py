@@ -30,7 +30,8 @@ import google.auth
 auth_credentials, auth_project_id = google.auth.default()
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT") or auth_project_id
 os.environ["GOOGLE_CLOUD_PROJECT"] = str(project_id)
-os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
+os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get("GOOGLE_CLOUD_LOCATION") or "us-central1"
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # 0. Configure Shared Model with Retry Logic
 shared_model = Gemini(
